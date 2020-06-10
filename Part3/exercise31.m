@@ -34,23 +34,23 @@ K_dz = 1.1;
 
 %% Attitude controller
 % P-controller attitude
-K_p = 0.5;
+K_p = 0.9;
 % D-controller attitude
-K_d = 0.05;
+K_d = 1.5;
 
 %% Desired attitude/altitude
 % Steps
-roll = 10*d2r;
-pitch = 0;
+roll = 0;
+pitch = 10*d2r;
 yaw = 0;
-altitude = 0;
+altitude = 1;
 
 reference = [roll, pitch, yaw, altitude]';
 
 %% SET SIM VALUES
-dt = 0.5; % time increment [s]
+dt = 0.01; % time increment [s]
 start_time = 0;
-end_time = 1000;
+end_time = 5;
 time = start_time:dt:end_time;
 
 % filename for storing pictures
@@ -82,7 +82,7 @@ for t = time
     dTh_int = [trapz(dt, dTh_vec(1,:));
                trapz(dt, dTh_vec(2,:));
                trapz(dt, dTh_vec(3,:))];
-    dTh_int
+           
     u = K_d*dTh + K_p*(dTh_int - reference(1:3));
        
     % propeller speeds squared
