@@ -29,11 +29,11 @@ dTh = [0,0,0]'; % angular velocity
 
 thrust_hover = sqrt(m*g/(4*k_f));
 % Omega = [thrust_hover,thrust_hover,thrust_hover,thrust_hover]'; % angular speed of four propellers
-Omega = [0,30,0,30];
+Omega = [30,30,30,30];
 
 dt = 0.1; % time increment [s]
 start_time = 0;
-end_time = 10;
+end_time = 1;
 time = start_time:dt:end_time;
 
 p_vec = zeros(3,length(time));

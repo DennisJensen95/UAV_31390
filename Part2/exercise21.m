@@ -39,14 +39,6 @@ time = start_time:dt:end_time;
 p_vec = zeros(3,length(time));
 Th_vec = zeros(3,length(time));
 
-% filename for storing pictures
-if quat
-    filename = sprintf('QUAT-%d-%d-%d-%d', Omega(1), Omega(2), Omega(3), Omega(4));
-else
-    filename = sprintf('%d-%d-%d-%d', Omega(1), Omega(2), Omega(3), Omega(4));
-end
-path = '~/Desktop/';
-
 %% Simulation
 i = 0;
 for t = time
@@ -103,8 +95,6 @@ xlabel('Time [s]')
 ylabel('Position [m]')
 legend('x position', 'y position', 'z position', 'Location', 'northwest')
 
-saveas(gcf,strcat(path, 'position_', filename), 'epsc');
-
 figure(2)
 plot(time, Th_vec(1,:), 'LineWidth', 2)
 hold on
@@ -115,7 +105,6 @@ xlabel('Time [s]')
 ylabel('Angle [deg]')
 legend('\phi', '\theta', '\psi', 'Location', 'northwest')
 
-saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
 
 %% FUNCTIONS
 function dTh2omega = EulerParam(phi, theta)
