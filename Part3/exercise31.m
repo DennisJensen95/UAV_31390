@@ -25,29 +25,32 @@ dp = [0,0,0]'; % velocity
 Th = [0,0,0]'; % orientation Euler
 dTh = [0,0,0]'; % angular velocity
 
-%% SET CONTROLLER VALUES
+%% Altitude controller
+% P-controller
+K_pz = 0.8;
+% D-controller
+K_dz = 1.1;
+% I-controller
 
-% P-controller altitude
-K_pz = 1.5;
-
+%% Attitude controller
 % P-controller attitude
-K_p = 0.01;
-
+K_p = 0.5;
 % D-controller attitude
-K_d = 0.1;
+K_d = 0.05;
 
+%% Desired attitude/altitude
 % Steps
-roll = 0;
+roll = 10*d2r;
 pitch = 0;
 yaw = 0;
-altitude = 1;
+altitude = 0;
 
-reference = [roll, pitch, yaw, altitude];
+reference = [roll, pitch, yaw, altitude]';
 
 %% SET SIM VALUES
-dt = 1; % time increment [s]
+dt = 0.5; % time increment [s]
 start_time = 0;
-end_time = 2000;
+end_time = 1000;
 time = start_time:dt:end_time;
 
 % filename for storing pictures
@@ -76,21 +79,24 @@ for t = time
             Th(3) - reference(3)];
     
     
-    dTh_int = [cumtrapz(dt, dTh_vec(1,:));
-               cumtrapz(dt, dTh_vec(2,:));
-               cumtrapz(dt, dTh_vec(3,:))];
-    
-    u = K_d*dTh + K_p*dTh_int;
-    
+    dTh_int = [trapz(dt, dTh_vec(1,:));
+               trapz(dt, dTh_vec(2,:));
+               trapz(dt, dTh_vec(3,:))];
+    dTh_int
+    u = K_d*dTh + K_p*(dTh_int - reference(1:3));
+       
     % propeller speeds squared
+    u_z = K_pz*ez + K_dz * (-dp(3));
+    alti_part = (m*g+u_z)/(k_f*4*cos(Th(2))*cos(Th(1)));
+    
     gamma = zeros(1,4);
-    gamma(1) = (m*g+K_pz*ez)/(k_f*4*cos(Th(2))*cos(Th(1))) - (2*b*u(1)*I(1,1)+...
+    gamma(1) = alti_part - (2*b*u(1)*I(1,1)+...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(2) = (m*g+K_pz*ez)/(k_f*4*cos(Th(2))*cos(Th(1))) - (2*b*u(2)*I(2,2)-...
+    gamma(2) = alti_part - (2*b*u(2)*I(2,2)-...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(3) = (m*g+K_pz*ez)/(k_f*4*cos(Th(2))*cos(Th(1))) - (-2*b*u(1)*I(1,1)+...
-        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(4) = (m*g+K_pz*ez)/(k_f*4*cos(Th(2))*cos(Th(1))) - (-2*b*u(2)*I(2,2)-...
+    gamma(3) = alti_part - (-2*b*u(1)*I(1,1)+...
+        u(3)*I(3,3)*u_z)/(4*b*k_f*L);
+    gamma(4) = alti_part - (-2*b*u(2)*I(2,2)-...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
 
     
@@ -139,16 +145,16 @@ legend('x position', 'y position', 'z position', 'Location', 'northwest')
 
 saveas(gcf,strcat(path, 'position_', filename), 'epsc');
 
-% figure(2)
-% plot(time, Th_vec(1,:), 'LineWidth', 2)
-% hold on
-% plot(time, Th_vec(2,:), 'LineWidth', 2)
-% plot(time, Th_vec(3,:), 'LineWidth', 2)
-% grid on
-% xlabel('Time [s]')
-% ylabel('Angle [deg]')
-% legend('\phi', '\theta', '\psi', 'Location', 'northwest')
-% 
+figure(2)
+plot(time, Th_vec(1,:)*r2d, 'LineWidth', 2)
+hold on
+plot(time, Th_vec(2,:)*r2d, 'LineWidth', 2)
+plot(time, Th_vec(3,:)*r2d, 'LineWidth', 2)
+grid on
+xlabel('Time [s]')
+ylabel('Angle [deg]')
+legend('\phi', '\theta', '\psi', 'Location', 'northwest')
+
 % saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
 
 %% FUNCTIONS

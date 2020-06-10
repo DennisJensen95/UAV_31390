@@ -25,38 +25,44 @@ dp = [0,0,0]'; % velocity
 Th = [0,0,0]'; % orientation Euler
 dTh = [0,0,0]'; % angular velocity
 
-%% SET CONTROLLER VALUES
+%% Altitude controller
+% P-controller
+K_pz = 0.8;
+% D-controller
+K_dz = 1.1;
+% I-controller
 
-% P-controller altitude
-K_pz = 4;
-
+%% Attitude controller
 % P-controller attitude
-K_p = 4;
-
+K_p = 0.5;
 % D-controller attitude
-K_d = 5;
+K_d = 0.05;
 
+%% Desired attitude/altitude
 % Steps
-roll = 0;
+roll = 10*d2r;
 pitch = 0;
 yaw = 0;
-altitude = 1;
+altitude = 0;
 
-reference = [roll, pitch, yaw, altitude];
+reference = [roll, pitch, yaw, altitude]';
 
 %% SET SIM VALUES
-dt = 0.1; % time increment [s]
+dt = 0.01; % time increment [s]
 start_time = 0;
-end_time = 1;
+end_time = 10;
 time = start_time:dt:end_time;
-
-p_vec = zeros(3,length(time));
-Th_vec = zeros(3,length(time));
-dTh_vec = zeros(3,length(time));
 
 % filename for storing pictures
 filename = sprintf('STEP-%d-%d-%d-%d', altitude, roll, pitch, yaw);
 path = '~/Desktop/';
+
+%% INIT VECTORS
+p_vec = zeros(3,length(time));
+Th_vec = zeros(3,length(time));
+
+dTh_vec = zeros(3,length(time));
+
 
 %% Simulation
 i = 0;
@@ -65,10 +71,8 @@ for t = time
     %% Attitude + altitude controller
     
     % Position error
-    e_x = [0;
-           0;
-           p(3) - reference(4)];
-       
+    ez = reference(4) - p(3);
+    
     % Orientation error
     e_Th = [Th(1) - reference(1);
             Th(2) - reference(2);
@@ -79,17 +83,20 @@ for t = time
                cumtrapz(dt, dTh_vec(2,:));
                cumtrapz(dt, dTh_vec(3,:))];
     
-    u = K_d*(e_Th) + K_p*dTh_int;
-    
+    u = K_d*(-dTh + K_p*(reference(1:3) - Th);
+       
     % propeller speeds squared
+    u_z = K_pz*ez + K_dz * (-dp(3));
+    alti_part = (m*g+u_z)/(k_f*4*cos(Th(2))*cos(Th(1)));
+    
     gamma = zeros(1,4);
-    gamma(1) = (m*g+K_pz*e_x(3))/(k_f*4*cos(Th(2))*cos(Th(1))) - (2*b*u(1)*I(1,1)+...
+    gamma(1) = alti_part - (2*b*u(1)*I(1,1)+...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(2) = (m*g+K_pz*e_x(3))/(k_f*4*cos(Th(2))*cos(Th(1))) - (2*b*u(2)*I(2,2)-...
+    gamma(2) = alti_part - (2*b*u(2)*I(2,2)-...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(3) = (m*g+K_pz*e_x(3))/(k_f*4*cos(Th(2))*cos(Th(1))) - (-2*b*u(1)*I(1,1)+...
-        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(4) = (m*g+K_pz*e_x(3))/(k_f*4*cos(Th(2))*cos(Th(1))) - (-2*b*u(2)*I(2,2)-...
+    gamma(3) = alti_part - (-2*b*u(1)*I(1,1)+...
+        u(3)*I(3,3)*u_z)/(4*b*k_f*L);
+    gamma(4) = alti_part - (-2*b*u(2)*I(2,2)-...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
 
     
@@ -148,7 +155,7 @@ xlabel('Time [s]')
 ylabel('Angle [deg]')
 legend('\phi', '\theta', '\psi', 'Location', 'northwest')
 
-saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
+% saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
 
 %% FUNCTIONS
 function dTh2omega = EulerParam(phi, theta)

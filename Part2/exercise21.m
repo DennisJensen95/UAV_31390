@@ -27,13 +27,13 @@ dTh = [0,0,0]'; % angular velocity
 
 %% SET SIM VALUES
 
-quat = true;
+quat = false;
 
-Omega = [30,0,30,0]'; % angular speed of four propellers
+Omega = [30,30,30,30]'; % angular speed of four propellers
 
 dt = 0.1; % time increment [s]
 start_time = 0;
-end_time = 10;
+end_time = 1;
 time = start_time:dt:end_time;
 
 p_vec = zeros(3,length(time));
@@ -45,6 +45,7 @@ if quat
 else
     filename = sprintf('%d-%d-%d-%d', Omega(1), Omega(2), Omega(3), Omega(4));
 end
+
 path = '~/Desktop/';
 
 %% Simulation
