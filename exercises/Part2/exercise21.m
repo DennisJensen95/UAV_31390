@@ -47,25 +47,19 @@ for t = time
     % rotation of body fixed frame w.r.t. intertial frame
     b2i = rot_rpy(Th);
     R = b2i';
-    quat_rot = quaternion_rpy(Th)';
+    quat_rot = quaternion_rpy(Th)';     
     
     % rotational velocity of body fixed frame
     omega = EulerParam(Th(1),Th(2))*dTh;
-    
+    F_B = k_f*[0,0,sum(Omega.^2)]';
     % Forces
-    
     F_D = -D*dp;
     F_g = -[0,0,m*g]';
     
     % linear acceleration
     if quat
-        F_B = k_f*[0, 0,0,sum(Omega.^2)]';
-        temp = quat_rot.*F_B.*quat_rot.^(-1);
-        temp = [temp(2); temp(3); temp(4)];
-        ddp = 1/m*(F_g + temp + F_D);
+        ddp = 1/m*(F_g + rotate_vec_quat(quat_rot, F_B) + F_D);
     else
-        F_B = k_f*[0,0,sum(Omega.^2)]';
-        temp = R*F_B
         ddp = 1/m*(F_g + R*F_B + F_D);
     end
    

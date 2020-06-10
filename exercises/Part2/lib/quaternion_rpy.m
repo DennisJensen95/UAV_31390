@@ -21,6 +21,16 @@ qx = (body2inertial(3, 2) - body2inertial(2, 3)/(4*qw));
 qy = (body2inertial(1, 3) - body2inertial(3, 1)/(4*qw));
 qz = (body2inertial(2, 1) - body2inertial(1, 2)/(4*qw));
 
-quat_body2inertial = [qw; qx; qy; qz];
+quat_body2inertial = [qw; qx; qy; qz]
+
+
+qw = cos(phi/2)*cos(theta/2)*cos(psi/2) + sin(phi/2)*sin(theta/2)*sin(psi/2);
+qx = sin(phi/2)*cos(theta/2)*cos(psi/2) - cos(phi/2)*sin(theta/2)*sin(psi/2);
+qy = cos(phi/2)*sin(theta/2)*cos(psi/2) + sin(phi/2)*cos(theta/2)*sin(psi/2);
+qz = cos(phi/2)*cos(theta/2)*sin(psi/2) - sin(phi/2)*sin(theta/2)*cos(psi/2);
+
+
+quat_body2inertial = [qw; qx; qy; qz]
+
 
 end
