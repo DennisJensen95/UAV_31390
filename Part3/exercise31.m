@@ -43,7 +43,7 @@ K_d = 1.5;
 roll = 0;
 pitch = 10*d2r;
 yaw = 0;
-altitude = 1;
+altitude = 0;
 
 reference = [roll, pitch, yaw, altitude]';
 
@@ -95,7 +95,7 @@ for t = time
     gamma(2) = alti_part - (2*b*u(2)*I(2,2)-...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
     gamma(3) = alti_part - (-2*b*u(1)*I(1,1)+...
-        u(3)*I(3,3)*u_z)/(4*b*k_f*L);
+        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
     gamma(4) = alti_part - (-2*b*u(2)*I(2,2)-...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
 
