@@ -1,7 +1,0 @@
-function rotated_vec = quaternion_rpy(quat_rot, vec)
-    
-    quat_vec = [0 vec]
-    rot = quat_
-    
-
-end

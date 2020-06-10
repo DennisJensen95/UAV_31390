@@ -27,49 +27,40 @@ dTh = [0,0,0]'; % angular velocity
 
 %% SET SIM VALUES
 
-quat = true;
-
-Omega = [30,30,30,30]'; % angular speed of four propellers
+thrust_hover = sqrt(m*g/(4*k_f));
+% Omega = [thrust_hover,thrust_hover,thrust_hover,thrust_hover]'; % angular speed of four propellers
+Omega = [30,30,30,30];
 
 dt = 0.1; % time increment [s]
 start_time = 0;
-end_time = 10;
+end_time = 1;
 time = start_time:dt:end_time;
 
 p_vec = zeros(3,length(time));
 Th_vec = zeros(3,length(time));
 
+% filename for storing pictures
+filename = sprintf('LIN-%d-%d-%d-%d', Omega(1), Omega(2), Omega(3), Omega(4));
+path = '~/Desktop/';
+
 %% Simulation
 i = 0;
 for t = time
     i = i + 1;
-    %% Current state
-    % rotation of body fixed frame w.r.t. intertial frame
-    b2i = rot_rpy(Th);
-    R = b2i';
-    quat_rot = quaternion_rpy(Th)';     
+    %% Current state linearized
+    % input from thrusters
+    u1 = k_f*sum(Omega.^2);
     
     % rotational velocity of body fixed frame
-    omega = EulerParam(Th(1),Th(2))*dTh;
-    F_B = k_f*[0,0,sum(Omega.^2)]';
-    % Forces
-    F_D = -D*dp;
-    F_g = -[0,0,m*g]';
+    omega = dTh;
     
     % linear acceleration
-    if quat
-        rotate_vec_quat(
-        ddp = 1/m*(F_g + rotate_vec_quat(quat_rot, F_B) + F_D);
-    else
-        F_B = k_f*[0,0,sum(Omega.^2)]';
-        temp = R*F_B
-        ddp = 1/m*(F_g + R*F_B + F_D);
-    end
-   
-    
+    ddp = 1/m*[(Th(1)*sin(Th(3))+Th(2)*cos(Th(3)))*u1;
+               (sin(Th(3))*Th(2)-Th(1)*cos(Th(3)))*u1;
+               u1-m*g] - D*dp;
+           
     % angular acceleration
-    domega = I \ (getTauB(L, k_f, b, Omega) - cross(omega,I*omega));
-    
+    domega = I \ getTauB(L, k_f, b, Omega);
     
     %% Update variables
     % position
@@ -80,7 +71,6 @@ for t = time
     omega = omega + dt * domega;
     dTh = EulerParam(Th(1),Th(2)) \ omega;
     Th = Th + dt * dTh;
-%     Th = normalizeAng(Th);
     
     %% Append to vectors
     p_vec(:,i) = p;
@@ -98,6 +88,8 @@ xlabel('Time [s]')
 ylabel('Position [m]')
 legend('x position', 'y position', 'z position', 'Location', 'northwest')
 
+saveas(gcf,strcat(path, 'position_', filename), 'epsc');
+
 figure(2)
 plot(time, Th_vec(1,:), 'LineWidth', 2)
 hold on
@@ -108,6 +100,7 @@ xlabel('Time [s]')
 ylabel('Angle [deg]')
 legend('\phi', '\theta', '\psi', 'Location', 'northwest')
 
+saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
 
 %% FUNCTIONS
 function dTh2omega = EulerParam(phi, theta)
