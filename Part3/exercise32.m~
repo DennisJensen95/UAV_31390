@@ -42,8 +42,8 @@ K_d = 1.5;
 % Steps
 roll = 0;
 pitch = 0;
-yaw = 0;
-altitude = 1;
+yaw = 1;
+altitude = 0;
 
 reference = [roll, pitch, yaw, altitude]';
 
@@ -54,7 +54,7 @@ end_time = 10;
 time = start_time:dt:end_time;
 
 % filename for storing pictures
-filename = sprintf('STEP-LIN-%d-%d-%d-%d', altitude, roll, pitch, yaw);
+filename = sprintf('STEP-%d-%d-%d-%d', altitude, roll, pitch, yaw);
 path = '~/Desktop/';
 
 %% INIT VECTORS
@@ -73,12 +73,7 @@ for t = time
     % Position error
     ez = reference(4) - p(3);
     
-    % Orientation error
-    e_Th = [Th(1) - reference(1);
-            Th(2) - reference(2);
-            Th(3) - reference(3)];
-    
-    
+    % integrated orientation
     dTh_int = [trapz(dt, dTh_vec(1,:));
                trapz(dt, dTh_vec(2,:));
                trapz(dt, dTh_vec(3,:))];
@@ -104,16 +99,22 @@ for t = time
     % input from thrusters
     u1 = k_f*sum(gamma);
     
+    % rotation of body fixed frame w.r.t. intertial frame
+    b2i = rot_rpy(Th);
+    R = b2i';
+    
     % rotational velocity of body fixed frame
-    omega = dTh;
+    omega = EulerParam(Th(1),Th(2))*dTh;
+    F_B = [0,0,u1]';
+    % Forces
+    F_D = -D*dp;
+    F_g = -[0,0,m*g]';
     
     % linear acceleration
-    ddp = 1/m*[(Th(1)*sin(Th(3))+Th(2)*cos(Th(3)))*u1;
-               (sin(Th(3))*Th(2)-Th(1)*cos(Th(3)))*u1;
-               u1-m*g] - D*dp;
-           
+    ddp = 1/m*(F_g + R*F_B + F_D);
+   
     % angular acceleration
-    domega = I \ getTauB(L, k_f, b, gamma);
+    domega = I \ (getTauB(L, k_f, b, gamma) - cross(omega,I*omega));
     
     %% Update variables
     % position
