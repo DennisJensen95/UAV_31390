@@ -38,19 +38,28 @@ K_p = 0.9;
 % D-controller attitude
 K_d = 1.5;
 
+%% Position controller
+% P-controller attitude
+K_ppos = 0.005;
+% D-controller attitude
+K_dpos = 0.0005;
+
 %% Desired attitude/altitude
 % Steps
 roll = 0;
 pitch = 0;
-yaw = 1;
+yaw = 0;
 altitude = 0;
 
 reference = [roll, pitch, yaw, altitude]';
 
+% Position
+p_d = [0, 1, altitude]';
+
 %% SET SIM VALUES
-dt = 0.01; % time increment [s]
+dt = 0.1; % time increment [s]
 start_time = 0;
-end_time = 10;
+end_time = 100;
 time = start_time:dt:end_time;
 
 % filename for storing pictures
@@ -69,21 +78,37 @@ i = 0;
 for t = time
     i = i + 1;
     %% Attitude + altitude controller
+    b2i = rot_rpy(Th);
+    R = b2i';
     
     % Position error
-    ez = reference(4) - p(3);
+    e_p = p_d - p;
     
-    % integrated orientation
+    % Desired angles
+    angles_desired = [0 -1 0; 1 0 0]*R*[K_ppos*e_p(1) + K_dpos * dp(1),... 
+                                        K_ppos*e_p(2) + K_dpos * dp(2), 0]';
+    angles_desired*r2d
+    reference(1:2) = angles_desired;
+    
+    % Orientation error
+    e_Th = [Th(1) - reference(1);
+            Th(2) - reference(2);
+            Th(3) - reference(3)];
+    
+    
     dTh_int = [trapz(dt, dTh_vec(1,:));
                trapz(dt, dTh_vec(2,:));
                trapz(dt, dTh_vec(3,:))];
-           
+    % Control inputs       
     u = K_d*dTh + K_p*(dTh_int - reference(1:3));
-       
-    % propeller speeds squared
-    u_z = K_pz*ez + K_dz * (-dp(3));
+    
+    
+    u_z = K_pz*e_p(3) + K_dz * (-dp(3));
     alti_part = (m*g+u_z)/(k_f*4*cos(Th(2))*cos(Th(1)));
     
+    
+       
+    % propeller speeds squared
     gamma = zeros(1,4);
     gamma(1) = alti_part - (2*b*u(1)*I(1,1)+...
         u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
@@ -99,22 +124,16 @@ for t = time
     % input from thrusters
     u1 = k_f*sum(gamma);
     
-    % rotation of body fixed frame w.r.t. intertial frame
-    b2i = rot_rpy(Th);
-    R = b2i';
-    
     % rotational velocity of body fixed frame
-    omega = EulerParam(Th(1),Th(2))*dTh;
-    F_B = [0,0,u1]';
-    % Forces
-    F_D = -D*dp;
-    F_g = -[0,0,m*g]';
+    omega = dTh;
     
     % linear acceleration
-    ddp = 1/m*(F_g + R*F_B + F_D);
-   
+    ddp = 1/m*[(Th(1)*sin(Th(3))+Th(2)*cos(Th(3)))*u1;
+               (sin(Th(3))*Th(2)-Th(1)*cos(Th(3)))*u1;
+               u1-m*g] - D*dp;
+           
     % angular acceleration
-    domega = I \ (getTauB(L, k_f, b, gamma) - cross(omega,I*omega));
+    domega = I \ getTauB(L, k_f, b, gamma);
     
     %% Update variables
     % position
@@ -156,7 +175,7 @@ xlabel('Time [s]')
 ylabel('Angle [deg]')
 legend('\phi', '\theta', '\psi', 'Location', 'northwest')
 
-saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
+% saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
 
 %% FUNCTIONS
 function dTh2omega = EulerParam(phi, theta)
