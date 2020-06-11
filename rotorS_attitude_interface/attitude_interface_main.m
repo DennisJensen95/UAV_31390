@@ -6,7 +6,7 @@
 %%
 clc;
 close all;
-clear all;
+clear;
 %%
 
 % Define constants
@@ -18,4 +18,4 @@ ODOMETRY_SUB_DT =   0.01;
 GAZEBO_SYNC_DT =    0.01;
 RAD2DEG =           180/pi;
 DEG2RAD =           pi/180;
-THRUST_OFFSET =     15;
+THRUST_OFFSET =     7.16;
