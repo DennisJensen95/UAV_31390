@@ -40,8 +40,8 @@ K_d = 1.5;
 
 %% Desired attitude/altitude
 % Steps
-roll = 10*d2r;
-pitch = 0;
+roll = 0;
+pitch = 10*d2r;
 yaw = 0;
 altitude = 0;
 

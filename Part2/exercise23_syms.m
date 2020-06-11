@@ -28,4 +28,4 @@ I \ (tau_B - cross(w, I*w))
 
 
 %% Exercise 3.3
-[0 1 0; -1 0 0]*R*[ex ey 0]'
+[0 -1 0; 1 0 0]*R*[ex ey 0].'

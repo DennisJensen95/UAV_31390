@@ -39,12 +39,14 @@ K_p = 0.9;
 K_d = 1.5;
 
 %% Position controller
-% P-controller attitude
-K_ppos = 0.005;
-% D-controller attitude
-K_dpos = 0.0005;
+% P-controller 
+K_ppos = 0.010;
+% D-controller 
+K_dpos = 0.06;
+% I-controller 
+K_ipos = 0.00001;
 
-%% Desired attitude/altitude
+%% Desired attitude/altitudez
 % Steps
 roll = 0;
 pitch = 0;
@@ -54,12 +56,12 @@ altitude = 0;
 reference = [roll, pitch, yaw, altitude]';
 
 % Position
-p_d = [0, 1, altitude]';
+p_d = [20, 25, altitude]';
 
 %% SET SIM VALUES
 dt = 0.1; % time increment [s]
 start_time = 0;
-end_time = 100;
+end_time = 50;
 time = start_time:dt:end_time;
 
 % filename for storing pictures
@@ -69,7 +71,7 @@ path = '~/Desktop/';
 %% INIT VECTORS
 p_vec = zeros(3,length(time));
 Th_vec = zeros(3,length(time));
-
+e_p_vec = zeros(3, length(time));
 dTh_vec = zeros(3,length(time));
 
 
@@ -83,26 +85,15 @@ for t = time
     
     % Position error
     e_p = p_d - p;
+    e_p_vec(:,i) = e_p;
+    trapz(dt, e_p_vec(1,:))
     
     % Desired angles
-    angles_desired = [0 -1 0; 1 0 0]*R*[K_ppos*e_p(1) + K_dpos * dp(1),... 
-                                        K_ppos*e_p(2) + K_dpos * dp(2), 0]';
-    angles_desired*r2d
+    angles_desired = [0 -1 0; 1 0 0]*R*[K_ppos*e_p(1) + K_dpos * (-dp(1)) + K_ipos * trapz(dt, e_p_vec(1,:)),... 
+                                        K_ppos*e_p(2) + K_dpos * (-dp(2)) + K_ipos * trapz(dt, e_p_vec(2,:)), 0]';
     reference(1:2) = angles_desired;
-    
-    % Orientation error
-    e_Th = [Th(1) - reference(1);
-            Th(2) - reference(2);
-            Th(3) - reference(3)];
-    
-    
-    dTh_int = [trapz(dt, dTh_vec(1,:));
-               trapz(dt, dTh_vec(2,:));
-               trapz(dt, dTh_vec(3,:))];
     % Control inputs       
-    u = K_d*dTh + K_p*(dTh_int - reference(1:3));
-    
-    
+    u = K_d*(dTh) + K_p*(Th - reference(1:3));
     u_z = K_pz*e_p(3) + K_dz * (-dp(3));
     alti_part = (m*g+u_z)/(k_f*4*cos(Th(2))*cos(Th(1)));
     
@@ -110,14 +101,10 @@ for t = time
        
     % propeller speeds squared
     gamma = zeros(1,4);
-    gamma(1) = alti_part - (2*b*u(1)*I(1,1)+...
-        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(2) = alti_part - (2*b*u(2)*I(2,2)-...
-        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(3) = alti_part - (-2*b*u(1)*I(1,1)+...
-        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(4) = alti_part - (-2*b*u(2)*I(2,2)-...
-        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(1) = alti_part - (2*b*u(1)*I(1,1)+ u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(2) = alti_part - (2*b*u(2)*I(2,2)- u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(3) = alti_part - (-2*b*u(1)*I(1,1)+ u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(4) = alti_part - (-2*b*u(2)*I(2,2)- u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
 
     
     %% SYSTEM DYNAMICS
