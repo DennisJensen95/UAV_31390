@@ -163,8 +163,6 @@ function [ route ] = Recursive_3d( map, start, end_, parent_node, closed, childr
         end
         route = flip(route);
     end
-    
-    in_use = monitor_memory_whos;
-    fprintf('Memory usage is = %.20f\n',in_use);
+
     
 end
