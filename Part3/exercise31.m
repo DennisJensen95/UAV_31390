@@ -27,16 +27,16 @@ dTh = [0,0,0]'; % angular velocity
 
 %% Altitude controller
 % P-controller
-K_pz = 0.8;
+K_pz = 1;
 % D-controller
-K_dz = 1.1;
+K_dz = 0;
 % I-controller
 
 %% Attitude controller
 % P-controller attitude
-K_p = 0.9;
+K_p = 0;
 % D-controller attitude
-K_d = 1.5;
+K_d = 0;
 
 %% Desired attitude/altitude
 % Steps
