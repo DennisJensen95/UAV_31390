@@ -4,23 +4,12 @@
 % drone
 
 %%
-clc;
-close all;
-clear all;
+clc
+close all
+clear
 %%
 
 % Define constants
-m = 0.716;
-L = 0.17;
-r = 0.1;
-Ixx = 0.007; 
-Iyy = 0.007;
-Izz=0.012;
-g = 9.81;
-b = 0.001;
-k_f = 0.001;
-
-
 FIXED_STEP_SIZE =   0.01;
 POS_SUB_DT =        0.01;
 ATTI_SUB_DT =       0.01;
@@ -29,5 +18,16 @@ ODOMETRY_SUB_DT =   0.01;
 GAZEBO_SYNC_DT =    0.01;
 RAD2DEG =           180/pi;
 DEG2RAD =           pi/180;
-THRUST_OFFSET =     15;
+THRUST_OFFSET =     7.16;
 MAX_ROTOR_VEL =     838;
+
+%% HUMMINGBIRD
+
+Ixx = 0.007; 
+Iyy = 0.007;
+Izz = 0.012;
+g = 9.81;
+m = 0.716;
+b = 1.6e-2;
+k_f = 8.54858e-06;
+L = 0.17;
