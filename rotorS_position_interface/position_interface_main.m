@@ -20,13 +20,21 @@ RAD2DEG =           180/pi;
 DEG2RAD =           pi/180;
 THRUST_OFFSET =     15;
 
-%% PATH PLANNING
-addpath('../maze/');
-maze_1;
-route_start = [0, 0];
-route_end = [3, 6];
+%% PATH PLANNING 2D
+% addpath('../maze/');
+% maze_1;
+% start_ = [0, 0];
+% end_ = [3, 6];
+% 
+% route_2d = Astar_2d(map, start_+1, end_+1);
+% height = ones(length(route_2d), 1);
+% route_2d = [ route_2d height ]';
+% route_2d = route_2d - [1;1;0];
 
-route_2d = Astar_2d(map, route_start+1, route_end+1);
-height = ones(length(route_2d), 1);
-route_2d = [ route_2d height ]';
-route_2d = route_2d - [1;1;0];
+%% PATH PLANNING 3D
+addpath('../maze');
+maze_1_3D;
+start_ = [0, 0, 1];
+end_ = [8, 9, 3];
+
+route_3d = Astar_3d(map, start_+1, end_+1)' - [1;1;0];

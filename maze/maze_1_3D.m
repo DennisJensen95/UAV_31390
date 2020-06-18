@@ -34,7 +34,10 @@ layer3 = [0 0 0 0 0 0 0 0 0 0;
 0 0 0 0 0 0 0 0 0 0];
 layer3 = flip(layer3)';
 
-map = zeros(10,10,3);
+map = zeros(10,10,6);
 map(:,:,1) = layer1;
-map(:,:,2) = layer2;
-map(:,:,3) = layer3;
+map(:,:,2) = layer1;
+map(:,:,3) = layer2;
+map(:,:,4) = layer2;
+map(:,:,5) = layer3;
+map(:,:,6) = layer3;
