@@ -12,14 +12,14 @@ clear all;
 
 maze_1;
 start = [0, 0];
-end_ = [5,0];
+end_ = [5, 0];
 
 fig_num = 1;
 
 plot_map(map, fig_num);
 plot_start_stop(start, end_, fig_num)
 
-route = [1 1; 2 1; 3 1; 4 1; 5 1; 6 1];
+route = Astar_2d(map, start+1, end_+1);
 
 plot_route(route, fig_num);
 
@@ -35,7 +35,7 @@ end_ = [5 0 2];
 plot_map(map, fig_num, 0);
 plot_start_stop(start, end_, fig_num)
 
-route = [1 1 1; 2 1 2; 3 1 3; 4 1 3; 5 1 3; 6 1 3];
+route = Astar_3d(map, start+1, end_+1);
 
 plot_route(route, fig_num)
 
