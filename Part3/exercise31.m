@@ -27,21 +27,21 @@ dTh = [0,0,0]'; % angular velocity
 
 %% Altitude controller
 % P-controller
-K_pz = 1;
+K_pz = 0.8;
 % D-controller
-K_dz = 0;
+K_dz = 1.1;
 % I-controller
 
 %% Attitude controller
 % P-controller attitude
-K_p = 0;
+K_p = 0.9;
 % D-controller attitude
-K_d = 0;
+K_d = 1.5;
 
 %% Desired attitude/altitude
 % Steps
 roll = 0;
-pitch = 0;
+pitch = 10*d2r;
 yaw = 0;
 altitude = 1;
 
