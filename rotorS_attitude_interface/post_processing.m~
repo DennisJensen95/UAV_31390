@@ -22,11 +22,10 @@ legend('(x,y,z) desired position', '(x,y,z) position')
 figure(1)
 plot(x_position_des.time, x_position_des.data, '-.', 'LineWidth', 3)
 hold on
-plot(x_position.time, x_position.data, 'LineWidth', 2)
+plot(x_position.time, x_position.data, '-.', 'LineWidth', 3)
 xlabel('time [s]')
 ylabel('x position [m]')
-legend('Desired position', 'Actual position')
-grid;
+legend('Desired position', 'Actual position', 'LineWidth', 1)
 
 figure(2)
 plot(y_position_des.time, y_position_des.data, '-.', 'LineWidth', 3)
@@ -35,7 +34,6 @@ plot(y_position.time, y_position.data, 'LineWidth', 2)
 xlabel('time [s]')
 ylabel('y position [m]')
 legend('Desired position', 'Actual position')
-grid;
 
 
 figure(3)
@@ -45,4 +43,3 @@ plot(yaw_position.time, yaw_position.data, 'LineWidth', 2)
 xlabel('time [s]')
 ylabel('yaw position [degrees]')
 legend('Desired position', 'Actual position')
-grid;
