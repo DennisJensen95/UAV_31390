@@ -8,8 +8,10 @@ d2r = pi/180;
 addpath("./lib");
 
 %% CONSTANTS
-k_f = 0.01; % [?]
-b = 0.001; % [?]
+% k_f = 0.01; % [?]
+% b = 0.001; % [?]
+b = 0.016;
+k_f = 8.54858e-06;
 m = 0.5; % [kg]
 g = 9.81; % [m/s²]
 L = 0.225; % [m]
@@ -27,45 +29,57 @@ dTh = [0,0,0]'; % angular velocity
 
 %% Altitude controller
 % P-controller
-K_pz = 0.8;
+K_pz = 4.5;
 % D-controller
-K_dz = 1.1;
+K_dz = 2.5;
 % I-controller
 
 %% Attitude controller
 % P-controller attitude
-K_p = 0.9;
+K_p = 3;
 % D-controller attitude
-K_d = 1.5;
+K_d = 3;
 
 %% Position controller
-% P-controller 
-K_ppos = 0.010;
+% P-controller
+K_ppos = 0.021;%0.021;
 % D-controller 
-K_dpos = 0.06;
+K_dpos = 0.075; %0.075;
 % I-controller 
-K_ipos = 0.00001;
+K_ipos = 0;
 
-%% Desired attitude/altitudez
+%% Desired attitude/altitude
 % Steps
 roll = 0;
 pitch = 0;
 yaw = 0;
-altitude = 0;
+altitude = 1;
 
-reference = [roll, pitch, yaw, altitude]';
+reference = [roll; pitch; yaw];
 
-% Position
-p_d = [20, 25, altitude]';
+% Position desired
+position = [10; 0; altitude];
 
 %% SET SIM VALUES
-dt = 0.1; % time increment [s]
+dt = 0.01; % time increment [s]
 start_time = 0;
-end_time = 50;
+end_time = 25;
 time = start_time:dt:end_time;
 
+% reference = ones(4,length(time));
+% reference(:,time<1) = reference(:,time<1)*0;
+% reference(:, time>=1) = reference(:,time>=1) .* [roll; pitch; yaw; altitude];
+
+p_d = ones(3,length(time));
+p_d(:,time<1) = p_d(:,time<1)*0;
+p_d(:, time>=1) = p_d(:,time>=1) .* position;
+
+p_d(1:2, time < 3) = p_d(1:2, time < 3)*0;
+
+
+
 % filename for storing pictures
-filename = sprintf('STEP-%d-%d-%d-%d', altitude, roll, pitch, yaw);
+filename = sprintf('STEP-LIN-%d-%d-%d-%d', roll, pitch, yaw, altitude);
 path = '~/Desktop/';
 
 %% INIT VECTORS
@@ -73,7 +87,6 @@ p_vec = zeros(3,length(time));
 Th_vec = zeros(3,length(time));
 e_p_vec = zeros(3, length(time));
 dTh_vec = zeros(3,length(time));
-
 
 %% Simulation
 i = 0;
@@ -84,28 +97,30 @@ for t = time
     R = b2i';
     
     % Position error
-    e_p = p_d - p;
+    e_p = p_d(:,i) - p;
     e_p_vec(:,i) = e_p;
-    trapz(dt, e_p_vec(1,:))
     
     % Desired angles
-    angles_desired = [0 -1 0; 1 0 0]*R*[K_ppos*e_p(1) + K_dpos * (-dp(1)) + K_ipos * trapz(dt, e_p_vec(1,:)),... 
-                                        K_ppos*e_p(2) + K_dpos * (-dp(2)) + K_ipos * trapz(dt, e_p_vec(2,:)), 0]';
+    angles_desired = [0 -1 0; 1 0 0]*R*[K_ppos*e_p(1) + K_dpos * (-dp(1)) + K_ipos * trapz(dt, e_p_vec(1,:));... 
+                                        K_ppos*e_p(2) + K_dpos * (-dp(2)) + K_ipos * trapz(dt, e_p_vec(2,:)); 0];
+    angles_desired = atan2(sin(angles_desired), cos(angles_desired));
     reference(1:2) = angles_desired;
-    % Control inputs       
-    u = K_d*(dTh) + K_p*(Th - reference(1:3));
+    
+    % Control inputs
+    u = K_d*(zeros(3,1)-dTh) + K_p*(reference-Th);
     u_z = K_pz*e_p(3) + K_dz * (-dp(3));
     alti_part = (m*g+u_z)/(k_f*4*cos(Th(2))*cos(Th(1)));
     
-    
-       
     % propeller speeds squared
     gamma = zeros(1,4);
-    gamma(1) = alti_part - (2*b*u(1)*I(1,1)+ u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(2) = alti_part - (2*b*u(2)*I(2,2)- u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(3) = alti_part - (-2*b*u(1)*I(1,1)+ u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-    gamma(4) = alti_part - (-2*b*u(2)*I(2,2)- u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
-
+    gamma(1) = alti_part + (2*b*u(1)*I(1,1)+...
+        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(2) = alti_part + (2*b*u(2)*I(2,2)-...
+        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(3) = alti_part + (-2*b*u(1)*I(1,1)+...
+        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
+    gamma(4) = alti_part + (-2*b*u(2)*I(2,2)-...
+        u(3)*I(3,3)*k_f*L)/(4*b*k_f*L);
     
     %% SYSTEM DYNAMICS
     % input from thrusters
@@ -131,6 +146,7 @@ for t = time
     omega = omega + dt * domega;
     dTh = EulerParam(Th(1),Th(2)) \ omega;
     Th = Th + dt * dTh;
+    Th = atan2(sin(Th),cos(Th));
     
     %% Append to vectors
     p_vec(:,i) = p;
@@ -145,22 +161,25 @@ plot(time, p_vec(1,:), 'LineWidth', 2)
 hold on
 plot(time, p_vec(2,:), 'LineWidth', 2)
 plot(time, p_vec(3,:), 'LineWidth', 2)
+
+plot(time, p_d(3,:), '--k')
+plot(time, p_d(1,:), '-.k')
 grid on
 xlabel('Time [s]')
 ylabel('Position [m]')
-legend('x position', 'y position', 'z position', 'Location', 'northwest')
+legend('x position', 'y position', 'z position', 'step input z', 'step input x', 'Location', 'southeast')
 
-saveas(gcf,strcat(path, 'position_', filename), 'epsc');
+% saveas(gcf,strcat(path, 'position_', filename), 'epsc');
 
-figure(2)
-plot(time, Th_vec(1,:)*r2d, 'LineWidth', 2)
-hold on
-plot(time, Th_vec(2,:)*r2d, 'LineWidth', 2)
-plot(time, Th_vec(3,:)*r2d, 'LineWidth', 2)
-grid on
-xlabel('Time [s]')
-ylabel('Angle [deg]')
-legend('\phi', '\theta', '\psi', 'Location', 'northwest')
+% figure(2)
+% plot(time, Th_vec(1,:)*r2d, 'LineWidth', 2)
+% hold on
+% plot(time, Th_vec(2,:)*r2d, 'LineWidth', 2)
+% plot(time, Th_vec(3,:)*r2d, 'LineWidth', 2)
+% grid on
+% xlabel('Time [s]')
+% ylabel('Angle [deg]')
+% legend('\phi', '\theta', '\psi', 'Location', 'southeast')
 
 % saveas(gcf,strcat(path, 'angle_', filename), 'epsc');
 

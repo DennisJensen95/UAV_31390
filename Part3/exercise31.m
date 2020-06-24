@@ -70,7 +70,6 @@ Th_vec = zeros(3,length(time));
 
 dTh_vec = zeros(3,length(time));
 
-
 %% Simulation
 i = 0;
 for t = time
