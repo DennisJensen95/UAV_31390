@@ -32,7 +32,7 @@ THRUST_OFFSET =     7.16;
 log_data();
 
 function log_data
-    a = sim('attitude_interface_yaw','SimulationMode','normal');
+    a = sim('attitude_interface_route.slx','SimulationMode','normal');
     x_position = a.get('x_position');
     y_position = a.get('y_position');
     z_position = a.get('z_position');

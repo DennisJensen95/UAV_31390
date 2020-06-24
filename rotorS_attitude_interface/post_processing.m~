@@ -55,19 +55,13 @@ hold on;
 plot(x_position.data, y_position.data)
 hold on;
 for i=1:length(x_position.data)
-    bool_st = mod(i, 10) == 0;
-    if (bool_st)
+    if ((i % 10 == 0))
         x = x_position.data(i);
         y = y_position.data(i);
         yaw = yaw_position.data(i);
-        u = 0.5 * cos(deg2rad(yaw)); 
-        v = 0.5 * sin(deg2rad(yaw));
-        yaw_des = yaw_position_des.data(i);
-        u_des = 0.5 * cos(deg2rad(yaw_des)); 
-        v_des = 0.5 * sin(deg2rad(yaw_des));
-        quiver(x, y, u, v, 'r', 'LineWidth', 2);
-        hold on;
-        quiver(x, y, u_des, v_des, 'g', 'LineWidth', 2);
+        u = 0.2 * cos(deg2rad(yaw)); 
+        v = 0.2 * sin(deg2rad(yaw));
+        quiver(x, y, u, v);
         hold on;
     end
 end
